@@ -1,7 +1,7 @@
 package dev.shaythesquog.components.users;
 
 import com.google.gson.JsonObject;
-import dev.shaythesquog.components.AbstractAPIComponent;
+import dev.shaythesquog.components.JsonAPIComponent;
 
 import java.util.Optional;
 
@@ -9,7 +9,7 @@ import java.util.Optional;
  * @see <a href="https://discord.com/developers/docs/resources/user#collectibles">Collectibles</a>
  */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-public class Collectibles extends AbstractAPIComponent {
+public class Collectibles implements JsonAPIComponent {
     private final Optional<Nameplate> nameplate;
 
     public Collectibles(JsonObject data) {

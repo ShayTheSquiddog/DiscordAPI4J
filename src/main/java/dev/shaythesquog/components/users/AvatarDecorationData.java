@@ -1,13 +1,13 @@
 package dev.shaythesquog.components.users;
 
 import com.google.gson.JsonObject;
-import dev.shaythesquog.components.AbstractAPIComponent;
+import dev.shaythesquog.components.JsonAPIComponent;
 import dev.shaythesquog.components.Snowflake;
 
 /**
  * @see <a href="https://discord.com/developers/docs/resources/user#avatar-decoration-data-object">Avatar Decoration Data</a>
  */
-public class AvatarDecorationData extends AbstractAPIComponent {
+public class AvatarDecorationData implements JsonAPIComponent {
     private final String asset;
     private final Snowflake sku_id;
 

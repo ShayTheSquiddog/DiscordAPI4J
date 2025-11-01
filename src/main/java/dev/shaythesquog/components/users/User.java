@@ -1,7 +1,7 @@
 package dev.shaythesquog.components.users;
 
 import com.google.gson.JsonObject;
-import dev.shaythesquog.components.AbstractAPIComponent;
+import dev.shaythesquog.components.JsonAPIComponent;
 import dev.shaythesquog.components.Snowflake;
 
 import org.jetbrains.annotations.Nullable;
@@ -17,7 +17,7 @@ import java.util.Optional;
 // the api, and values that just were not sent at all. Values tagged with @Nullable are values that can be sent as null
 // objects by the api, and Optional fields are values that may or may not end up being sent by the API
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "OptionalAssignedToNull"})
-public class User extends AbstractAPIComponent {
+public class User implements JsonAPIComponent {
    private final Snowflake id;
    private final String username;
    private final String discriminator;
@@ -53,7 +53,7 @@ public class User extends AbstractAPIComponent {
        verified = Optional.ofNullable(data.has("verified") ? data.get("verified").getAsBoolean() : null);
        email = data.has("email") ? (data.get("email").isJsonNull() ? null : Optional.of(data.get("email").getAsString())) : Optional.empty();
        flags = Optional.ofNullable(data.has("flags") ? Flags.getFlagsFromInt(data.get("flags").getAsInt()) : null);
-       premium_type = Optional.ofNullable(data.has("premium_type") ? NitroType.valueOfOrdinal(data.get("premium_type").getAsInt()) : null);
+       premium_type = Optional.ofNullable(data.has("premium_type") ? NitroType.values()[data.get("premium_type").getAsInt()] : null);
        public_flags = Optional.ofNullable(data.has("public_flags") ? Flags.getFlagsFromInt(data.get("public_flags").getAsInt()) : null);
        avatar_decoration_data = data.has("avatar_decoration_data") ? (data.get("avatar_decoration_data").isJsonNull() ? null : Optional.of(new AvatarDecorationData(data.get("avatar_decoration_data").getAsJsonObject()))) : Optional.empty();
        collectibles = data.has("collectibles") ? (data.get("collectibles").isJsonNull() ? null : Optional.of(new Collectibles(data.get("collectibles").getAsJsonObject()))) : Optional.empty();
@@ -135,16 +135,6 @@ public class User extends AbstractAPIComponent {
         NONE,
         NITRO_CLASSIC,
         NITRO,
-        NITRO_BASIC;
-
-        public static NitroType valueOfOrdinal(int ordinal) {
-            return switch (ordinal) {
-                case 0 -> NONE;
-                case 1 -> NITRO_CLASSIC;
-                case 2 -> NITRO;
-                case 3 -> NITRO_BASIC;
-                default -> null;
-            };
-        }
+        NITRO_BASIC
     }
 }

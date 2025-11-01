@@ -1,18 +1,35 @@
 package dev.shaythesquog.components;
 
+import com.google.gson.JsonArray;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 
 @SuppressWarnings("unused")
-public record Snowflake(long id) implements Comparable<Snowflake> {
-
+public class Snowflake implements Comparable<Snowflake> {
+    private final long id;
     public Snowflake(String id) {
         this(Long.parseUnsignedLong(id));
     }
 
+    private Snowflake(long id) {
+        this.id = id;
+    }
+
+    public Snowflake[] fromJsonArray(@NotNull JsonArray jsonArray) {
+        return jsonArray.asList().stream().map(arrElement -> new Snowflake(arrElement.getAsString())).toArray(Snowflake[]::new);
+    }
+
+    @Override
     public int compareTo(Snowflake other) {
         return Long.compareUnsigned(id, other.id);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if(other.getClass() == getClass())
+            return id == ((Snowflake)other).id;
+        return false;
     }
 
     @Override

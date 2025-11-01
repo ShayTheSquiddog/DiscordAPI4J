@@ -1,13 +1,14 @@
 package dev.shaythesquog.components.users;
 
-import com.google.gson.JsonObject;
-import dev.shaythesquog.components.AbstractAPIComponent;
+import com.google.gson.*;
+import dev.shaythesquog.components.JsonAPIComponent;
 import dev.shaythesquog.components.Snowflake;
+
 
 /**
  * @see <a href="https://discord.com/developers/docs/resources/user#nameplate">Nameplate</a>
  */
-public class Nameplate extends AbstractAPIComponent {
+public class Nameplate implements JsonAPIComponent {
     private final Snowflake sku_id;
     private final String asset;
     private final String label;

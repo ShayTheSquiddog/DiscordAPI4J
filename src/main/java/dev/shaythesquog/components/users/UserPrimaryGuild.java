@@ -4,14 +4,14 @@ package dev.shaythesquog.components.users;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import dev.shaythesquog.components.AbstractAPIComponent;
+import dev.shaythesquog.components.JsonAPIComponent;
 import dev.shaythesquog.components.Snowflake;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * @see <a href="https://discord.com/developers/docs/resources/user#user-object-user-primary-guild">User Primary Guilds</a>
  */
-public class UserPrimaryGuild extends AbstractAPIComponent {
+public class UserPrimaryGuild implements JsonAPIComponent {
     @Nullable private final Snowflake identity_guild_id;
     @Nullable private final Boolean identity_enabled;
     @Nullable private final String tag;

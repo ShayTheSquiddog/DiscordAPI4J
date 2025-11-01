@@ -2,6 +2,7 @@ package dev.shaythesquog.components;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import dev.shaythesquog.components.guilds.Guild;
 import dev.shaythesquog.components.users.User;
 
 import java.io.BufferedReader;
@@ -13,18 +14,18 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 @SuppressWarnings("unused")
-public class DiscordAPIConnection {
+public class DiscordAPIAgent {
     private static final String API_ENDPOINT = "https://discord.com/api/v10";
     private final String encodedCredentials;
     private final String botToken;
     private JsonObject oAuth2Token;
 
-    public DiscordAPIConnection(String botToken) {
+    public DiscordAPIAgent(String botToken) {
         this.botToken = botToken;
         encodedCredentials = null;
     }
 
-    public DiscordAPIConnection(String botToken, String clientID, String clientSecret) {
+    public DiscordAPIAgent(String botToken, String clientID, String clientSecret) {
         this.botToken = botToken;
         encodedCredentials = Base64.getEncoder().encodeToString((clientID + ":" + clientSecret).getBytes(StandardCharsets.UTF_8));
     }
@@ -107,20 +108,36 @@ public class DiscordAPIConnection {
         }
     }
 
-    public User getUser(long userId) {
-        URL url = constructURL("/users/" + Long.toUnsignedString(userId));
+    public User getUser(Snowflake userId) {
+        URL url = constructURL("/users/" + userId.toString());
 
         HttpURLConnection connection = null;
         try {
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setRequestProperty("Content-Type", "application/json");
-            connection.setRequestProperty("Authorization", "Bot " + botToken);
-            connection.setDoOutput(false);
+            connection = buildGenericBotGet(url);
 
             String response = receiveResponse(connection);
 
             return new User(JsonParser.parseString(response).getAsJsonObject());
+        } catch (IOException ioException) {
+            throw new RuntimeException(ioException);
+        } finally {
+            if(connection != null)
+                connection.disconnect();
+        }
+    }
+
+    public Guild getGuild(Snowflake guildId) {
+        return getGuild(guildId, false);
+    }
+
+    public Guild getGuild(Snowflake guildId, boolean with_counts) {
+        URL url = constructURL("/guilds/" + guildId.toString() + "?with_counts=" + with_counts);
+
+        HttpURLConnection connection = null;
+        try {
+            connection = buildGenericBotGet(url);
+            String response = receiveResponse(connection);
+            return new Guild(JsonParser.parseString(response).getAsJsonObject());
         } catch (IOException ioException) {
             throw new RuntimeException(ioException);
         } finally {
@@ -144,7 +161,7 @@ public class DiscordAPIConnection {
             String line;
             while((line = bufferedReader.readLine()) != null) {
                 response.append(line);
-                System.out.println(line);
+//                System.out.println(line);
             }
         }
         return response.toString();
@@ -156,5 +173,14 @@ public class DiscordAPIConnection {
         } catch (MalformedURLException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private HttpURLConnection buildGenericBotGet(URL url) throws IOException {
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        connection.setRequestProperty("Content-Type", "application/json");
+        connection.setRequestProperty("Authorization", "Bot " + botToken);
+        connection.setDoOutput(false);
+        return connection;
     }
 }
