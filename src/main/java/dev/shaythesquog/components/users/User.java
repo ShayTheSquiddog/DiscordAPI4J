@@ -6,6 +6,7 @@ import dev.shaythesquog.components.Snowflake;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -88,6 +89,56 @@ public class User implements JsonAPIComponent {
        if(primary_guild == null) data.add("primary_guild", null);
        else primary_guild.ifPresent(guild -> data.add("primary_guild", guild.toJson()));
        return data;
+   }
+
+    /**
+     * @see <a href="https://discord.com/developers/docs/reference#image-formatting-cdn-endpoints">CDN Endpoints</a>
+     */
+   public String avatarURL() {
+       StringBuilder avatarURL = new StringBuilder("https://cdn.discordapp.com/");
+       if(avatar == null) {
+           // Use the default user avatar
+           avatarURL.append("embed/avatars/");
+           if(discriminator.equals("0")) {
+                // Modern Username System
+                avatarURL.append((Long.parseUnsignedLong(id.toString()) >> 22) % 6);
+           } else {
+               // Legacy username system
+               avatarURL.append(Integer.parseInt(discriminator) % 5);
+           }
+           avatarURL.append(".png");
+       } else {
+           // User has an avatar
+           avatarURL.append(String.format("avatars/%s/%s", id.toString(), avatar));
+           if(avatar.startsWith("a_")) {
+               // User has an animated avatar
+               avatarURL.append(".gif");
+           } else {
+               // Avatar is static
+               avatarURL.append(".png");
+           }
+       }
+
+       return avatarURL.toString();
+   }
+
+   @SuppressWarnings({"Duplicates", "unused"})
+   public String avatarURL(int size) {
+       final int[] validSizes = new int[] {16, 32, 64, 128, 256, 512, 1024, 2048, 4096};
+       Arrays.sort(validSizes);
+       if(Arrays.binarySearch(validSizes, size) < 0)
+           throw new IllegalArgumentException("Invalid size: " + size);
+       return avatarURL() + "?size=" + size;
+   }
+
+   public Snowflake getId() {
+       return id;
+   }
+
+   public String getDisplayName() {
+       if(global_name != null)
+           return global_name;
+       else return username;
    }
 
    public enum Flags{

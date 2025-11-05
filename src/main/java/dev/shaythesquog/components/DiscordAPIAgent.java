@@ -1,5 +1,6 @@
 package dev.shaythesquog.components;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import dev.shaythesquog.components.guilds.Guild;
@@ -146,6 +147,62 @@ public class DiscordAPIAgent {
         }
     }
 
+    public Guild.GuildMember getGuildMember(Snowflake guildId, Snowflake memberId) {
+        return getGuildMember(getGuild(guildId), memberId);
+    }
+
+    public Guild.GuildMember getGuildMember(Guild guild, Snowflake memberId) {
+        URL url = constructURL(String.format("/guilds/%s/members/%s", guild.id.toString(), memberId.toString()));
+
+        HttpURLConnection connection = null;
+        try {
+            connection = buildGenericBotGet(url);
+            String response = receiveResponse(connection);
+            JsonObject guildMember = JsonParser.parseString(response).getAsJsonObject();
+            guildMember.addProperty("containingGuild", guild.id.toString());
+            return guild.newMember(guildMember);
+        } catch (IOException ioException) {
+            throw new RuntimeException(ioException);
+        } finally {
+            if(connection != null)
+                connection.disconnect();
+        }
+    }
+
+    // TODO Fix to webhook
+    public JsonObject getWebhook(Snowflake webhookId) {
+        URL url = constructURL("/webhooks/" + webhookId.toString());
+
+        HttpURLConnection connection = null;
+        try {
+            connection = buildGenericBotGet(url);
+            String response = receiveResponse(connection);
+            return JsonParser.parseString(response).getAsJsonObject();
+        } catch (IOException ioException) {
+            throw new RuntimeException(ioException);
+        } finally {
+            if(connection != null)
+                connection.disconnect();
+        }
+    }
+
+    // TODO fix to webhook list
+    public JsonArray listGuildWebhooks(Snowflake guildID) {
+        URL url = constructURL("/guilds/" + guildID.toString() + "/webhooks");
+
+        HttpURLConnection connection = null;
+        try {
+            connection = buildGenericBotGet(url);
+            String response = receiveResponse(connection);
+            return JsonParser.parseString(response).getAsJsonArray();
+        } catch (IOException ioException) {
+            throw new RuntimeException(ioException);
+        } finally {
+            if(connection != null)
+                connection.disconnect();
+        }
+    }
+
     private static String doSendReceive(HttpURLConnection connection, String data) throws IOException {
         try (DataOutputStream dataOutputStream = new DataOutputStream(connection.getOutputStream())) {
             dataOutputStream.write(data.getBytes(StandardCharsets.UTF_8));
@@ -161,7 +218,6 @@ public class DiscordAPIAgent {
             String line;
             while((line = bufferedReader.readLine()) != null) {
                 response.append(line);
-//                System.out.println(line);
             }
         }
         return response.toString();
