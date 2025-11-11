@@ -4,6 +4,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import dev.shaythesquog.components.guilds.Guild;
+import dev.shaythesquog.components.guilds.GuildMember;
+import dev.shaythesquog.components.guilds.Webhook;
 import dev.shaythesquog.components.users.User;
 
 import java.io.BufferedReader;
@@ -13,9 +15,14 @@ import java.io.InputStreamReader;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.LinkedList;
+import java.util.List;
 
 @SuppressWarnings("unused")
 public class DiscordAPIAgent {
+    public final Registry<User> USER_REGISTRY = new Registry<>();
+    public final Registry<Guild> GUILD_REGISTRY = new Registry<>();
+
     private static final String API_ENDPOINT = "https://discord.com/api/v10";
     private final String encodedCredentials;
     private final String botToken;
@@ -147,20 +154,15 @@ public class DiscordAPIAgent {
         }
     }
 
-    public Guild.GuildMember getGuildMember(Snowflake guildId, Snowflake memberId) {
-        return getGuildMember(getGuild(guildId), memberId);
-    }
-
-    public Guild.GuildMember getGuildMember(Guild guild, Snowflake memberId) {
-        URL url = constructURL(String.format("/guilds/%s/members/%s", guild.id.toString(), memberId.toString()));
+    public GuildMember getGuildMember(Snowflake guildId, Snowflake memberId) {
+        URL url = constructURL(String.format("/guilds/%s/members/%s", guildId.toString(), memberId.toString()));
 
         HttpURLConnection connection = null;
         try {
             connection = buildGenericBotGet(url);
             String response = receiveResponse(connection);
             JsonObject guildMember = JsonParser.parseString(response).getAsJsonObject();
-            guildMember.addProperty("containingGuild", guild.id.toString());
-            return guild.newMember(guildMember);
+            return new GuildMember(guildMember, guildId);
         } catch (IOException ioException) {
             throw new RuntimeException(ioException);
         } finally {
@@ -169,15 +171,14 @@ public class DiscordAPIAgent {
         }
     }
 
-    // TODO Fix to webhook
-    public JsonObject getWebhook(Snowflake webhookId) {
+    public Webhook getWebhook(Snowflake webhookId) {
         URL url = constructURL("/webhooks/" + webhookId.toString());
 
         HttpURLConnection connection = null;
         try {
             connection = buildGenericBotGet(url);
             String response = receiveResponse(connection);
-            return JsonParser.parseString(response).getAsJsonObject();
+            return new Webhook(JsonParser.parseString(response).getAsJsonObject(), this);
         } catch (IOException ioException) {
             throw new RuntimeException(ioException);
         } finally {
@@ -186,15 +187,17 @@ public class DiscordAPIAgent {
         }
     }
 
-    // TODO fix to webhook list
-    public JsonArray listGuildWebhooks(Snowflake guildID) {
+    public List<Webhook> listGuildWebhooks(Snowflake guildID) {
         URL url = constructURL("/guilds/" + guildID.toString() + "/webhooks");
 
         HttpURLConnection connection = null;
         try {
             connection = buildGenericBotGet(url);
             String response = receiveResponse(connection);
-            return JsonParser.parseString(response).getAsJsonArray();
+            JsonArray webhookArr = JsonParser.parseString(response).getAsJsonArray();
+            List<Webhook> webhooks = new LinkedList<>();
+            webhookArr.forEach(webhook -> webhooks.add(new Webhook(webhook.getAsJsonObject(), this)));
+            return webhooks;
         } catch (IOException ioException) {
             throw new RuntimeException(ioException);
         } finally {

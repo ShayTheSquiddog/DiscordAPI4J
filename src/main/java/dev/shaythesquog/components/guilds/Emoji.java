@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import dev.shaythesquog.components.JsonAPIComponent;
 import dev.shaythesquog.components.Snowflake;
+import dev.shaythesquog.components.SnowflakeIdentifiable;
 import dev.shaythesquog.components.users.User;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,8 +14,7 @@ import java.util.Optional;
  * @see <a href="https://discord.com/developers/docs/resources/emoji#emoji-object">Emoji</a>
  */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-public class Emoji implements JsonAPIComponent {
-    @Nullable private final Snowflake id;
+public class Emoji extends SnowflakeIdentifiable implements JsonAPIComponent {
     @Nullable private final String name;
     private final Optional<Snowflake[]> roles; // Array of role IDs
     private final Optional<User> user;
@@ -24,10 +24,10 @@ public class Emoji implements JsonAPIComponent {
     private final Optional<Boolean> available;
 
     public Emoji(JsonObject data){
-        id = new Snowflake(data.get("id").getAsString());
-        name = data.get("name").getAsString();
+        super(data.get("id").isJsonNull() ? null : Snowflake.of(data.get("id").getAsString()));
+        name = data.get("name").isJsonNull() ? null : data.get("name").getAsString();
         roles = Optional.ofNullable(data.has("roles") ?
-                data.getAsJsonArray("roles").asList().stream().map(roleID -> new Snowflake(roleID.getAsString())).toArray(Snowflake[]::new) : null);
+                data.getAsJsonArray("roles").asList().stream().map(roleID -> Snowflake.of(roleID.getAsString())).toArray(Snowflake[]::new) : null);
         user = Optional.ofNullable(data.has("user") ? new User(data.getAsJsonObject("user")) : null);
         require_colons = Optional.ofNullable(data.has("require_colons") ? data.get("require_colors").getAsBoolean() : null);
         managed = Optional.ofNullable(data.has("managed") ? data.get("managed").getAsBoolean() : null);

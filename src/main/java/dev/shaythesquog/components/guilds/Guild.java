@@ -3,25 +3,21 @@ package dev.shaythesquog.components.guilds;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import dev.shaythesquog.components.JsonAPIComponent;
+import dev.shaythesquog.components.Registry;
 import dev.shaythesquog.components.Snowflake;
-import dev.shaythesquog.components.users.AvatarDecorationData;
+import dev.shaythesquog.components.SnowflakeIdentifiable;
+import dev.shaythesquog.components.guilds.channels.Channel;
 import dev.shaythesquog.components.users.User;
 import org.jetbrains.annotations.Nullable;
 
-import java.time.Instant;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * @see <a href="https://discord.com/developers/docs/resources/guild#guild-object">Guild</a>
  */
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "OptionalAssignedToNull"})
-public class Guild implements JsonAPIComponent {
-        public final Snowflake id;
-        private final String name;
-        @Nullable private final String icon;
+public class Guild extends PartialGuild implements JsonAPIComponent {
+        public final Registry<Channel> CHANNEL_REGISTRY = new Registry<>();
         @Nullable private final Optional<String> icon_hash;
         @Nullable private final String splash;
         @Nullable private final String discovery_splash;
@@ -65,20 +61,18 @@ public class Guild implements JsonAPIComponent {
         @Nullable private final IncidentsData incidents_data;
 
     public Guild(JsonObject data) {
-        id = new Snowflake(data.get("id").getAsString());
-        name = data.get("name").getAsString();
-        icon = data.get("icon").isJsonNull() ? null : data.get("icon").getAsString();
+        super(data);
         icon_hash = data.has("icon_hash") ? (data.get("icon_hash").isJsonNull() ? null : Optional.of(data.get("icon_hash").getAsString())) : Optional.empty();
         splash = data.get("splash").isJsonNull() ? null : data.get("splash").getAsString();
         discovery_splash = data.get("discovery_splash").isJsonNull() ? null : data.get("discovery_splash").getAsString();
         owner = Optional.ofNullable(data.has("owner") ? data.get("owner").getAsBoolean() : null);
-        owner_id = new Snowflake(data.get("owner_id").getAsString());
+        owner_id = Snowflake.of(data.get("owner_id").getAsString());
         permissions = Optional.ofNullable(data.has("permissions") ? data.get("permissions").getAsString() : null);
         region = data.has("region") ? (data.get("region").isJsonNull() ? null : Optional.of(data.get("region").getAsString())) : Optional.empty();
-        afk_channel_id = data.get("afk_channel_id").isJsonNull() ? null : new Snowflake(data.get("afk_channel_id").getAsString());
+        afk_channel_id = data.get("afk_channel_id").isJsonNull() ? null : Snowflake.of(data.get("afk_channel_id").getAsString());
         afk_timeout = data.get("afk_timeout").getAsInt();
         widget_enabled = Optional.ofNullable(data.has("widget_enabled") ? data.get("widget_enabled").getAsBoolean() : null);
-        widget_channel_id = data.has("widget_channel_id") ? (data.get("widget_channel_id").isJsonNull() ? null : Optional.of(new Snowflake(data.get("widget_channel_id").getAsString()))) : Optional.empty();
+        widget_channel_id = data.has("widget_channel_id") ? (data.get("widget_channel_id").isJsonNull() ? null : Optional.of(Snowflake.of(data.get("widget_channel_id").getAsString()))) : Optional.empty();
         verification_level = VerificationLevel.values()[data.get("verification_level").getAsInt()];
         default_message_notifications = MessageNotificationLevel.values()[data.get("default_message_notifications").getAsInt()];
         explicit_content_filter = ExplicitFilterLevel.values()[data.get("explicit_content_filter").getAsInt()];
@@ -86,10 +80,10 @@ public class Guild implements JsonAPIComponent {
         emojis = data.getAsJsonArray("emojis").asList().stream().map(emojiObj -> new Emoji(emojiObj.getAsJsonObject())).toArray(Emoji[]::new);
         features = data.getAsJsonArray("features").asList().stream().map(feature -> GuildFeature.valueOf(feature.getAsString())).toArray(GuildFeature[]::new);
         mfa_level = MFALevel.values()[data.get("mfa_level").getAsInt()];
-        application_id = data.get("application_id").isJsonNull() ? null : new Snowflake(data.get("application_id").getAsString());
-        system_channel_id = data.get("system_channel_id").isJsonNull() ? null : new Snowflake(data.get("system_channel_id").getAsString());
+        application_id = data.get("application_id").isJsonNull() ? null : Snowflake.of(data.get("application_id").getAsString());
+        system_channel_id = data.get("system_channel_id").isJsonNull() ? null : Snowflake.of(data.get("system_channel_id").getAsString());
         system_channel_flags = SystemChannelFlags.getFlagsFromInt(data.get("system_channel_flags").getAsInt());
-        rules_channel_id = data.get("rules_channel_id").isJsonNull() ? null : new Snowflake(data.get("rules_channel_id").getAsString());
+        rules_channel_id = data.get("rules_channel_id").isJsonNull() ? null : Snowflake.of(data.get("rules_channel_id").getAsString());
         max_presences = data.has("max_presences") ? (data.get("max_presences").isJsonNull() ? null : Optional.of(data.get("max_presences").getAsInt())) : Optional.empty();
         max_members = Optional.ofNullable(data.has("max_members") ? data.get("max_members").getAsInt() : null);
         vanity_url_code = data.get("vanity_url_code").isJsonNull() ? null : data.get("vanity_url_code").getAsString();
@@ -98,7 +92,7 @@ public class Guild implements JsonAPIComponent {
         premium_tier = PremiumTier.values()[data.get("premium_tier").getAsInt()];
         premium_subscription_count = Optional.ofNullable(data.has("premium_subscription_count") ? data.get("premium_subscription_count").getAsInt() : null);
         preferred_locale = data.get("preferred_locale").getAsString();
-        public_updates_channel_id = data.get("public_updates_channel_id").isJsonNull() ? null : new Snowflake(data.get("public_updates_channel_id").getAsString());
+        public_updates_channel_id = data.get("public_updates_channel_id").isJsonNull() ? null : Snowflake.of(data.get("public_updates_channel_id").getAsString());
         max_video_channel_users = Optional.ofNullable(data.has("max_video_channel_users") ? data.get("max_video_channel_users").getAsInt() : null);
         max_stage_video_channel_users = Optional.ofNullable(data.has("max_stage_video_channel_users") ? data.get("max_stage_video_channel_users").getAsInt() : null);
         approximate_member_count = Optional.ofNullable(data.has("approximate_member_count") ? data.get("approximate_member_count").getAsInt() : null);
@@ -107,15 +101,12 @@ public class Guild implements JsonAPIComponent {
         nsfw_level = NSFWLevel.values()[data.get("nsfw_level").getAsInt()];
         stickers = Optional.ofNullable(data.has("stickers") ? data.getAsJsonArray("stickers").asList().stream().map(sticker -> new Sticker(sticker.getAsJsonObject())).toArray(Sticker[]::new) : null);
         premium_progress_bar_enabled = data.get("premium_progress_bar_enabled").getAsBoolean();
-        safety_alerts_channel_id = data.get("safety_alerts_channel_id").isJsonNull() ? null : new Snowflake(data.get("safety_alerts_channel_id").getAsString());
+        safety_alerts_channel_id = data.get("safety_alerts_channel_id").isJsonNull() ? null : Snowflake.of(data.get("safety_alerts_channel_id").getAsString());
         incidents_data = data.get("incidents_data").isJsonNull() ? null : new IncidentsData(data.get("incidents_data").getAsJsonObject());
     }
 
     public JsonObject toJson() {
-        JsonObject data = new JsonObject();
-        data.addProperty("id", id.toString());
-        data.addProperty("name", name);
-        data.addProperty("icon", icon);
+        JsonObject data = super.toJson();
         if(icon_hash == null) data.add("icon_hash", null);
         else icon_hash.ifPresent(ih -> data.addProperty("icon_hash", ih));
         data.addProperty("splash", splash);
@@ -179,6 +170,14 @@ public class Guild implements JsonAPIComponent {
         data.add("incidents_data", incidents_data == null ? null : incidents_data.toJson());
 
         return data;
+    }
+
+    public Channel lookupOrElseAdd(Channel channel) {
+        return CHANNEL_REGISTRY.lookupOrElseAdd(channel);
+    }
+
+    public boolean remove(Channel channel) {
+        return CHANNEL_REGISTRY.remove(channel);
     }
 
     public enum VerificationLevel {
@@ -277,144 +276,5 @@ public class Guild implements JsonAPIComponent {
         EXPLICIT,
         SAFE,
         AGE_RESTRICTED
-    }
-
-    public GuildMember newMember(JsonObject memberJson) {
-        return new GuildMember(memberJson);
-    }
-
-    public class GuildMember implements JsonAPIComponent {
-        private final Optional<User> user;
-        @Nullable private final Optional<String> nick;
-        @Nullable private final Optional<String> avatar;
-        @Nullable private final Optional<String> banner;
-        private final Snowflake[] roles;
-        @Nullable private final Instant joined_at;
-        @Nullable private final Optional<Instant> premium_since;
-        private final boolean deaf;
-        private final boolean mute;
-        private final GuildMemberFlags[] flags;
-        private final Optional<Boolean> pending;
-        private final Optional<String> permissions;
-        @Nullable private final Optional<Instant> communication_disabled_until;
-        @Nullable private final Optional<AvatarDecorationData> avatar_decoration_data;
-
-        public GuildMember(JsonObject data) {
-            user = Optional.ofNullable(data.has("user") ? new User(data.get("user").getAsJsonObject()) : null);
-            nick = data.has("nick") ? (data.get("nick").isJsonNull() ? null : Optional.of(data.get("nick").getAsString())) : Optional.empty();
-            avatar = data.has("avatar") ? (data.get("avatar").isJsonNull() ? null : Optional.of(data.get("avatar").getAsString())) : Optional.empty();
-            banner = data.has("banner") ? (data.get("banner").isJsonNull() ? null : Optional.of(data.get("banner").getAsString())) : Optional.empty();
-            roles = data.get("roles").getAsJsonArray().asList().stream().map(roleSF -> new Snowflake(roleSF.getAsString())).toArray(Snowflake[]::new);
-            joined_at = data.has("joined_at") ? Instant.parse(data.get("joined_at").getAsString()) : null;
-            premium_since = data.has("premium_since") ? (data.get("premium_since").isJsonNull() ? null : Optional.of(Instant.parse(data.get("premium_since").getAsString()))) : Optional.empty();
-            deaf = data.get("deaf").getAsBoolean();
-            mute = data.get("mute").getAsBoolean();
-            flags = GuildMemberFlags.getFlagsFromInt(data.get("flags").getAsInt());
-            pending = Optional.ofNullable(data.has("pending") ? data.get("pending").getAsBoolean() : null);
-            permissions = Optional.ofNullable(data.has("permissions") ? data.get("permissions").getAsString() : null);
-            communication_disabled_until = data.has("communication_disabled_until") ? (data.get("communication_disabled_until").isJsonNull() ? null : Optional.of(Instant.parse(data.get("communication_disabled_until").getAsString()))) : Optional.empty();
-            avatar_decoration_data = data.has("avatar_decoration_data") ? (data.get("avatar_decoration_data").isJsonNull() ? null : Optional.of(new AvatarDecorationData(data.getAsJsonObject("avatar_decoration_data")))) : Optional.empty();
-        }
-
-        @Override
-        public JsonObject toJson() {
-            JsonObject data = new JsonObject();
-            user.ifPresent(userObj -> data.add("user", userObj.toJson()));
-            if(nick == null) data.add("nick", null);
-            else nick.ifPresent(nickObj -> data.addProperty("nick", nickObj));
-            if(avatar == null) data.add("avatar", null);
-            else avatar.ifPresent(avatarObj -> data.addProperty("avatar", avatarObj));
-            if(banner == null) data.add("banner", null);
-            else banner.ifPresent(bannerObj -> data.addProperty("banner", bannerObj));
-
-            JsonArray rolesJson = new JsonArray();
-            for(Snowflake roleSF : roles)
-                rolesJson.add(roleSF.toString());
-            data.add("roles", rolesJson);
-
-            data.addProperty("joined_at", joined_at == null ? null : joined_at.toString());
-            if(premium_since == null) data.add("premium_since", null);
-            else premium_since.ifPresent(premiumInstant -> data.addProperty("premium_since", premiumInstant.toString()));
-            data.addProperty("deaf", deaf);
-            data.addProperty("mute", mute);
-            data.addProperty("flags", GuildMemberFlags.getFlagsAsInt(flags));
-            pending.ifPresent(pendingObj -> data.addProperty("pending", pendingObj));
-            permissions.ifPresent(permissionsObj -> data.addProperty("permissions", permissionsObj));
-            if(communication_disabled_until == null) data.add("communication_disabled_until", null);
-            else communication_disabled_until.ifPresent(cduInstant -> data.addProperty("communication_disabled_until", cduInstant.toString()));
-            if(avatar_decoration_data == null) data.add("avatar_decoration_data", null);
-            else avatar_decoration_data.ifPresent(addObj -> data.add("avatar_decoration_data", addObj.toJson()));
-
-            return data;
-        }
-
-        public String avatarURL() {
-            if(user.isEmpty() || avatar == null || avatar.isEmpty())
-                return user.map(User::avatarURL).orElse(null);
-            StringBuilder avatarURL = new StringBuilder(String.format("https://cdn.discordapp.com/guilds/%s/users/%s/avatars/%s", id.toString(), user.get().getId().toString(), avatar.get()));
-            if(avatar.get().startsWith("a_"))
-                avatarURL.append(".gif");
-            else
-                avatarURL.append(".png");
-            return avatarURL.toString();
-        }
-
-        @SuppressWarnings({"Duplicates", "unused"})
-        public String avatarURL(int size) {
-            final int[] validSizes = new int[] {16, 32, 64, 128, 256, 512, 1024, 2048, 4096};
-            Arrays.sort(validSizes);
-            if(Arrays.binarySearch(validSizes, size) < 0)
-                throw new IllegalArgumentException("Invalid size: " + size);
-            return avatarURL() + "?size=" + size;
-        }
-
-        @SuppressWarnings("unused")
-        public String getDisplayName() {
-            if(nick != null && nick.isPresent())
-                return nick.get();
-            else
-                return user.map(User::getDisplayName).orElse(null);
-        }
-
-        public enum GuildMemberFlags {
-            DID_REJOIN,
-            COMPLETED_ONBOARDING,
-            BYPASSES_VERIFICATION,
-            STARTED_ONBOARDING,
-            IS_GUEST,
-            STARTED_HOME_ACTIONS,
-            COMPLETED_HOME_ACTIONS,
-            AUTOMOD_QUARANTINED_USERNAME,
-            DM_SETTINGS_UPSELL_ACKNOWLEDGED(9),
-            AUTOMOD_QUARANTINED_GUILD_TAG(10);
-
-            public final int value;
-
-            GuildMemberFlags() {
-                this.value = ordinal();
-            }
-
-            GuildMemberFlags(int value) {
-                this.value = value;
-            }
-
-            public static int getFlagsAsInt(GuildMemberFlags... flags) {
-                int result = 0;
-                for (GuildMemberFlags flag : flags) {
-                    result += (1 << flag.value);
-                }
-                return result;
-            }
-
-            public static GuildMemberFlags[] getFlagsFromInt(int flagsInt) {
-                List<GuildMemberFlags> result = new LinkedList<>();
-                for(GuildMemberFlags flag : GuildMemberFlags.values()) {
-                    if((flagsInt >> flag.value) % 2 == 1) {
-                        result.add(flag);
-                    }
-                }
-                return result.toArray(new GuildMemberFlags[0]);
-            }
-        }
     }
 }

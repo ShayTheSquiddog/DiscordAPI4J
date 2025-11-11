@@ -18,7 +18,7 @@ public class UserPrimaryGuild implements JsonAPIComponent {
     @Nullable private final String badge;
 
     public UserPrimaryGuild(JsonObject userJson) {
-        identity_guild_id = userJson.get("identity_guild_id").isJsonNull() ? null : new Snowflake(userJson.get("identity_guild_id").getAsString());
+        identity_guild_id = userJson.get("identity_guild_id").isJsonNull() ? null : Snowflake.of(userJson.get("identity_guild_id").getAsString());
         identity_enabled = userJson.get("identity_enabled").isJsonNull() ? null : userJson.get("identity_enabled").getAsBoolean();
         tag = userJson.get("tag").isJsonNull() ? null : userJson.get("tag").getAsString();
         badge = userJson.get("badge").isJsonNull() ? null : userJson.get("badge").getAsString();

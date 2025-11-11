@@ -3,6 +3,7 @@ package dev.shaythesquog.components.guilds;
 import com.google.gson.JsonObject;
 import dev.shaythesquog.components.JsonAPIComponent;
 import dev.shaythesquog.components.Snowflake;
+import dev.shaythesquog.components.SnowflakeIdentifiable;
 import dev.shaythesquog.components.users.User;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,8 +13,7 @@ import java.util.Optional;
  * @see <a href="https://discord.com/developers/docs/resources/sticker#sticker-object-sticker-structure">Sticker Structure</a>
  */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-public class Sticker implements JsonAPIComponent {
-    private final Snowflake id;
+public class Sticker extends SnowflakeIdentifiable implements JsonAPIComponent {
     private final Optional<Snowflake> pack_id;
     private final String name;
     @Nullable private final String description;
@@ -26,15 +26,15 @@ public class Sticker implements JsonAPIComponent {
     private final Optional<Integer> sort_value;
 
     public Sticker(JsonObject data) {
-        id = new Snowflake(data.get("id").getAsString());
-        pack_id = Optional.ofNullable(data.has("pack_id") ? new Snowflake(data.get("pack_id").getAsString()) : null);
+        super(Snowflake.of(data.get("id").getAsString()));
+        pack_id = Optional.ofNullable(data.has("pack_id") ? Snowflake.of(data.get("pack_id").getAsString()) : null);
         name = data.get("name").getAsString();
         description = data.get("description").isJsonNull() ? null : data.get("description").getAsString();
         tags = data.get("tags").getAsString();
         type = StickerType.valueOf(data.get("type").getAsInt());
         format_type = StickerFormat.valueOf(data.get("format_type").getAsInt());
         available = Optional.ofNullable(data.has("available") ? data.get("available").getAsBoolean() : null);
-        guild_id = Optional.ofNullable(data.has("guild_id") ? new Snowflake(data.get("guild_id").getAsString()) : null);
+        guild_id = Optional.ofNullable(data.has("guild_id") ? Snowflake.of(data.get("guild_id").getAsString()) : null);
         user = Optional.ofNullable(data.has("user") ? new User(data.getAsJsonObject("user")) : null);
         sort_value = Optional.ofNullable(data.has("sort_value") ? data.get("sort_value").getAsInt() : null);
     }

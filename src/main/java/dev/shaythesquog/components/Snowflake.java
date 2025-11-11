@@ -6,14 +6,13 @@ import org.jetbrains.annotations.NotNull;
 import java.time.Instant;
 
 @SuppressWarnings("unused")
-public class Snowflake implements Comparable<Snowflake> {
-    private final long id;
-    public Snowflake(String id) {
+public record Snowflake(long id) implements Comparable<Snowflake> {
+    private Snowflake(String id) {
         this(Long.parseUnsignedLong(id));
     }
 
-    private Snowflake(long id) {
-        this.id = id;
+    public static Snowflake of(String id) {
+        return new Snowflake(id);
     }
 
     public Snowflake[] fromJsonArray(@NotNull JsonArray jsonArray) {
@@ -23,13 +22,6 @@ public class Snowflake implements Comparable<Snowflake> {
     @Override
     public int compareTo(Snowflake other) {
         return Long.compareUnsigned(id, other.id);
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if(other.getClass() == getClass())
-            return id == ((Snowflake)other).id;
-        return false;
     }
 
     @Override
@@ -43,7 +35,7 @@ public class Snowflake implements Comparable<Snowflake> {
     }
 
     public byte getWorkerID() {
-        return (byte) ((id &0x3E0000) >> 17);
+        return (byte) ((id & 0x3E0000) >> 17);
     }
 
     public byte getProcessID() {

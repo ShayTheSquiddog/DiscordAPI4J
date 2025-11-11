@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import dev.shaythesquog.components.JsonAPIComponent;
 import dev.shaythesquog.components.Snowflake;
 
+import dev.shaythesquog.components.SnowflakeIdentifiable;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
@@ -18,8 +19,7 @@ import java.util.Optional;
 // the api, and values that just were not sent at all. Values tagged with @Nullable are values that can be sent as null
 // objects by the api, and Optional fields are values that may or may not end up being sent by the API
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "OptionalAssignedToNull"})
-public class User implements JsonAPIComponent {
-   private final Snowflake id;
+public class User extends SnowflakeIdentifiable implements JsonAPIComponent {
    private final String username;
    private final String discriminator;
    @Nullable private final String global_name;
@@ -40,7 +40,7 @@ public class User implements JsonAPIComponent {
    @Nullable private final Optional<UserPrimaryGuild> primary_guild;
 
    public User(JsonObject data) {
-       id = new Snowflake(data.get("id").getAsString());
+       super(Snowflake.of(data.get("id").getAsString()));
        username = data.get("username").getAsString();
        discriminator = data.get("discriminator").getAsString();
        global_name = data.get("global_name").isJsonNull() ? null : data.get("global_name").getAsString();

@@ -3,6 +3,7 @@ package dev.shaythesquog.components.guilds;
 import com.google.gson.JsonObject;
 import dev.shaythesquog.components.JsonAPIComponent;
 import dev.shaythesquog.components.Snowflake;
+import dev.shaythesquog.components.SnowflakeIdentifiable;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedList;
@@ -13,8 +14,7 @@ import java.util.Optional;
  * @see <a href="https://discord.com/developers/docs/topics/permissions#role-object>Role Object</a>
  */
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "OptionalAssignedToNull"})
-public class Role implements JsonAPIComponent {
-    private final Snowflake id;
+public class Role extends SnowflakeIdentifiable implements JsonAPIComponent {
     private final String name;
     private final RoleColors colors;
     private final Boolean hoist;
@@ -28,7 +28,7 @@ public class Role implements JsonAPIComponent {
     private final RoleFlags[] flags;
 
     public Role(JsonObject data) {
-        id = new Snowflake(data.get("id").getAsString());
+        super(Snowflake.of(data.get("id").getAsString()));
         name = data.get("name").getAsString();
         colors = new RoleColors(data.getAsJsonObject("colors"));
         hoist = data.get("hoist").getAsBoolean();
@@ -97,10 +97,10 @@ public class Role implements JsonAPIComponent {
         private final boolean guild_connections;
 
         public RoleTags(JsonObject data) {
-            bot_id = Optional.ofNullable(data.has("bot_id") ? new Snowflake(data.get("bot_id").getAsString()) : null);
-            integration_id = Optional.ofNullable(data.has("integration_id") ? new Snowflake(data.get("integration_id").getAsString()) : null);
+            bot_id = Optional.ofNullable(data.has("bot_id") ? Snowflake.of(data.get("bot_id").getAsString()) : null);
+            integration_id = Optional.ofNullable(data.has("integration_id") ? Snowflake.of(data.get("integration_id").getAsString()) : null);
             premium_subscriber = data.has("premium_subscriber");
-            subscription_listing_id = Optional.ofNullable(data.has("subscription_listing_id") ? new Snowflake(data.get("subscription_listing_id").getAsString()) : null);
+            subscription_listing_id = Optional.ofNullable(data.has("subscription_listing_id") ? Snowflake.of(data.get("subscription_listing_id").getAsString()) : null);
             available_for_purchase = data.has("available_for_purchase");
             guild_connections = data.has("guild_connections");
         }
